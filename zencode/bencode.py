@@ -1,4 +1,3 @@
-
 class Encoder:
     """
     A class representing a bencode encoder. Can be used to encode python objects into bencode.
@@ -8,9 +7,6 @@ class Encoder:
         - list
         - dict
         - bytes
-
-    Attributes:
-        
     """
     def encode(self, data) -> bytes:
         match data:
@@ -19,12 +15,11 @@ class Encoder:
             case str():
                 return self.encode_str(data)
             case list():
-                # return self.encode_list_iter(data)
-                return self.encode_list_rec(b'', data, 0)
+                return self.encode_list(data)
             case dict():
                 return self.encode_dict(data)
             case _:
-                print('invalid type')
+                return None
         
     def encode_int(self, data) -> bytes:
         return bytes(f'i{data}e', encoding='ascii')
@@ -33,22 +28,25 @@ class Encoder:
         return bytes(f'{len(data)}:{data}', encoding='ascii')
     
     def encode_dict(self, data) -> bytes:
-        keys, values = data.keys(), data.values()
+        result = b'd'
 
-        is_valid_dict = all(isinstance(key, str) for key in keys)
-        if not is_valid_dict:
-            raise Exception('Invalid dict! Keys must be strings!')
+        try: 
+            for key, value in data.items():
+                encoded_key = self.encode(key)
+                encoded_val = self.encode(value)
+
+                if not isinstance(key, str):
+                    raise ValueError(f'dict key is not a string! Key is {key}')
+                
+                if not encoded_key or not encoded_val:
+                    raise ValueError(f'Invalid key, value pair: {key},{value}')
+                
+                result += encoded_key + encoded_val
+        except (TypeError, ValueError) as err:
+            raise err
         
-        bytes_list = [self.encode_str(key) + self.encode(val) for key, val in zip(keys, values)]  
-        return b'd' + b''.join(bytes_list) + b'e'
+        return result + b'e'
 
-    def encode_list_iter(self, data) -> bytes:
+    def encode_list(self, data) -> bytes:
         return b'l' + b''.join([self.encode(obj) for obj in data]) + b'e'
-    
-    def encode_list_rec(self, bytes_list, data, idx) -> bytes:
-        if idx >=  len(data):
-            return b'l' + bytes_list + b'e'
-        else:
-            bytes_list += self.encode(data[idx])
-            return self.encode_list_rec(bytes_list, data, idx + 1)
         
