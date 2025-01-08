@@ -33,8 +33,15 @@ class Encoder:
         return bytes(f'{len(data)}:{data}', encoding='ascii')
     
     def encode_dict(self, data) -> bytes:
+        keys, values = data.keys(), data.values()
+
+        is_valid_dict = all(isinstance(key, str) for key in keys)
+        if not is_valid_dict:
+            raise Exception('Invalid dict! Keys must be strings!')
         
-    
+        bytes_list = [self.encode_str(key) + self.encode(val) for key, val in zip(keys, values)]  
+        return b'd' + b''.join(bytes_list) + b'e'
+
     def encode_list_iter(self, data) -> bytes:
         return b'l' + b''.join([self.encode(obj) for obj in data]) + b'e'
     

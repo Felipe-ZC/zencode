@@ -14,7 +14,16 @@ def main():
     test_objs = [
         12345,
         "test object",
-        ["listObj1", 124123]
+        ["listObj1", 124123],
+        {
+            'test_str': 'object',
+            'test_int': 2,
+            'test_list': ['object', 2],
+            'test_dict': {
+                'test_key': 'test_val'
+            }
+
+        }
     ]
     for test_obj in test_objs:
         print(encoder.encode(test_obj))
