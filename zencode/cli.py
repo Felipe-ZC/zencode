@@ -2,6 +2,7 @@
 import argparse
 from .bencode import Encoder
 
+
 def main():
     parser = argparse.ArgumentParser(
         prog='zencode',
