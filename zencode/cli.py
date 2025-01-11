@@ -13,8 +13,8 @@ def main():
     parser.add_argument('filename')
     args = parser.parse_args()
 
-    # decoder = Decoder()
-    print(Decoder(b'i1234e2:hi').decode())
+    # print(Decoder(b'i1234e2:hili5678eei1e').decode())
+    print(Decoder(b'li1eei2e').decode())
 
     # print('Opening file with name: ', args.filename)
 

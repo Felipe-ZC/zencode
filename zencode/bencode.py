@@ -15,22 +15,49 @@ class Decoder:
         self._idx = 0
 
     def decode(self) -> int | str | list | dict:
-        result = ''
+        result = []
+
+        # TODO: We need to find a way to determine corresponding
+        # starting & ending characters. In other words, we need 
+        # a way of knowing where a list ends. Which starting character
+        # corresponding to an ending character. 
+
+        '''
+        decode(li1eei2e)
+            | case Tokens.LIST_START
+            | consume_next_byte()
+            | decode_list([])
+                | peek() != Tokens.END
+                | decode()
+                    | case Tokens.INT_START
+                    | consume_next_byte()
+                    | decode_int()
+                        | read_until(Tokens.END)
+                        | return b'1'        
+        '''
 
         while self._idx < len(self._data):
             match self._peek():
                 case Tokens.INT_START:
-                    result += str(self._decode_int())
+                    self._consume_next_byte()
+                    result.append(self._decode_int())
+                case Tokens.LIST_START:
+                    self._consume_next_byte()
+                    result.append(self._decode_list([]))
+                    pass
                 case Tokens.END:
                     self._consume_next_byte()
                 case _:
-                    result += self._decode_str()
-                # case LIST_START_TOK:
-                #     pass
+                    result.append(self._decode_str())
                 # case DICT_START_TOK:
                 #     pass
         
         return result
+    
+    def _decode_list(self, result_list) -> list:
+        if self._peek() != Tokens.END:
+            result_list.extend(self.decode())
+        return result_list
     
     def _decode_int(self) -> int:
         '''
@@ -41,13 +68,12 @@ class Decoder:
             3) Read until 'e' byte found, add each bit to a new byte
             4) Cast byte to int
         '''
-        self._consume_next_byte()
         return int(self._read_until(Tokens.END))        
     
     def _decode_str(self):
         # Next byte must be a number...
         if not self._peek() in b'0123456789':
-            raise ValueError(f'Invalid byte found while decoding str! Byte is {self._peek()}')
+            raise ValueError(f'Invalid byte found at position {self._idx} while decoding str! Byte is {self._peek()}')
         
         try:
             str_len = int(self._read_until(Tokens.STR_SEP))
@@ -88,14 +114,6 @@ class Decoder:
             result += self._consume_next_byte()
         return result
             
-    
-
-
-
-
-
-
-
 class Encoder:
     """
     A class representing a bencode encoder. Can be used to encode python objects into bencode.
