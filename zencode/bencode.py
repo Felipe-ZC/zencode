@@ -12,6 +12,7 @@ class Tokens:
 class Decoder:
     def __init__(self, data: bytes):
         self._data = data
+        self._char_stack = []
         self._idx = 0
 
     def decode(self) -> int | str | list | dict:
@@ -35,16 +36,22 @@ class Decoder:
                         | read_until(Tokens.END)
                         | return b'1'        
         '''
-
+        print('in _decode, result is: ', result)
         while self._idx < len(self._data):
             match self._peek():
                 case Tokens.INT_START:
                     self._consume_next_byte()
                     result.append(self._decode_int())
                 case Tokens.LIST_START:
+                    self._char_stack.append(self._peek())
                     self._consume_next_byte()
                     result.append(self._decode_list([]))
-                    pass
+                case Tokens.END if self._char_stack and self._char_stack[-1] in [Tokens.INT_START, Tokens.LIST_START]:
+                    print('in _decode, idx is ', self._idx)
+                    print('in _decode, char_stack is ', self._char_stack)
+                    self._char_stack.pop()
+                    self._consume_next_byte()                  
+                    return result
                 case Tokens.END:
                     self._consume_next_byte()
                 case _:
@@ -52,11 +59,16 @@ class Decoder:
                 # case DICT_START_TOK:
                 #     pass
         
+        print('idx is ', self._idx)
         return result
     
     def _decode_list(self, result_list) -> list:
+        print('in _decode_list, result_list is: ', result_list)
+
         if self._peek() != Tokens.END:
             result_list.extend(self.decode())
+
+        print('in _decode_list idx is ', self._idx)
         return result_list
     
     def _decode_int(self) -> int:
